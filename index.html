@@ -11,54 +11,65 @@
             border: 2px dashed #cbd5e1;
             transition: all 0.2s ease;
         }
+        /* ปรับสีเส้นประกล่องรูปภาพตามธีมเมื่อโฟกัส */
         .image-preview-area:focus {
             border-color: #4f46e5;
-            background-color: #f5f3ff;
+        }
+        .dark .image-preview-area {
+            border-color: #475569;
+        }
+        .dark .image-preview-area:focus {
+            border-color: #818cf8;
         }
     </style>
 </head>
-<body class="bg-slate-50 font-sans min-h-screen">
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 font-sans min-h-screen transition-colors duration-200">
 
-    <header class="bg-indigo-600 text-white p-4 shadow-md mb-8">
+    <header class="bg-indigo-600 text-white p-4 shadow-md mb-8 transition-colors">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold">🚀 Project Tracker (เวอร์ชัน 4 คอลัมน์)</h1>
-            <span class="text-sm bg-indigo-700 px-3 py-1 rounded-full">PCE Project</span>
+            <h1 class="text-xl font-bold">🚀 Project Tracker (เวอร์ชันโหมดมืด/สว่าง)</h1>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleDarkMode()" id="themeBtn" class="flex items-center gap-2 bg-indigo-700 hover:bg-indigo-800 px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer shadow-inner">
+                    🌙 โหมดมืด
+                </button>
+                <span class="text-sm bg-indigo-700 px-3 py-1 rounded-full hidden sm:inline">PCE Project</span>
+            </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4">
         
-        <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
-            <h2 class="text-lg font-semibold mb-4 text-slate-700">➕ เพิ่มงานใหม่</h2>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm mb-8 border border-slate-100 dark:border-slate-700/50 transition-colors">
+            <h2 class="text-lg font-semibold mb-4 text-slate-700 dark:text-slate-300">➕ เพิ่มงานใหม่</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="flex flex-col gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">ชื่องาน</label>
-                        <input type="text" id="taskTitle" placeholder="ชื่องาน เช่น ออกแบบหน้าแรก, แก้บั๊ก..." class="w-full border border-slate-200 p-2.5 rounded-lg focus:outline-indigo-500 text-sm">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">ชื่องาน</label>
+                        <input type="text" id="taskTitle" placeholder="ชื่องาน เช่น ออกแบบหน้าแรก, แก้บั๊ก..." class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-2.5 rounded-lg focus:outline-indigo-500 dark:focus:outline-indigo-400 text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">ผู้รับผิดชอบ</label>
-                        <input type="text" id="taskAssignee" placeholder="ระบุชื่อ..." class="w-full border border-slate-200 p-2.5 rounded-lg focus:outline-indigo-500 text-sm">
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">ผู้รับผิดชอบ</label>
+                        <input type="text" id="taskAssignee" placeholder="ระบุชื่อ..." class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-2.5 rounded-lg focus:outline-indigo-500 dark:focus:outline-indigo-400 text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-600 mb-1">คำอธิบายงาน (Task Description)</label>
-                        <textarea id="taskDesc" rows="4" placeholder="รายละเอียดงาน ขั้นตอนการทำ หรือโน้ตเพิ่มเติม..." class="w-full border border-slate-200 p-2.5 rounded-lg focus:outline-indigo-500 text-sm resize-none"></textarea>
+                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">คำอธิบายงาน (Task Description)</label>
+                        <textarea id="taskDesc" rows="4" placeholder="รายละเอียดงาน ขั้นตอนการทำ หรือโน้ตเพิ่มเติม..." class="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 p-2.5 rounded-lg focus:outline-indigo-500 dark:focus:outline-indigo-400 text-sm resize-none"></textarea>
                     </div>
                 </div>
 
                 <div class="flex flex-col">
-                    <label class="block text-sm font-medium text-slate-600 mb-1">วางรูปภาพประกอบ (คลิกแล้วกด Ctrl+V หรือลากไฟล์มาวางที่นี่)</label>
+                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">วางรูปภาพประกอบ (คลิกแล้วกด Ctrl+V หรือลากไฟล์มาวางที่นี่)</label>
                     <div id="imagePasteArea" tabindex="0" 
-                         class="image-preview-area flex-1 min-h-[180px] bg-slate-50 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer focus:outline-none"
+                         class="image-preview-area flex-1 min-h-[180px] bg-slate-50 dark:bg-slate-900/30 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer focus:outline-none"
                          ondragover="handleDragOver(event)" 
                          ondragleave="handleDragLeave(event)" 
                          ondrop="handleFileDrop(event)">
                         
-                        <div id="pastePrompt" class="text-center text-slate-400 pointer-events-none">
+                        <div id="pastePrompt" class="text-center text-slate-400 dark:text-slate-500 pointer-events-none">
                             <p class="text-3xl mb-2">📸</p>
-                            <p class="text-sm font-medium">กด <kbd class="bg-slate-200 px-1.5 py-0.5 rounded text-xs text-slate-600 font-mono font-bold">Ctrl + V</kbd> หรือ <span class="font-bold text-indigo-500">ลากรูปภาพมาวาง</span></p>
-                            <p class="text-xs mt-1 text-slate-400">เพื่อวางภาพจาก Clipboard หรือหน้าจอที่แคปมา</p>
+                            <p class="text-sm font-medium">กด <kbd class="bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs text-slate-600 dark:text-slate-300 font-mono font-bold">Ctrl + V</kbd> หรือ <span class="font-bold text-indigo-500 dark:text-indigo-400">ลากรูปภาพมาวาง</span></p>
+                            <p class="text-xs mt-1">เพื่อวางภาพจาก Clipboard หรือหน้าจอที่แคปมา</p>
                         </div>
                         
                         <div id="imagePreviewContainer" class="hidden w-full h-full relative flex items-center justify-center">
@@ -78,34 +89,34 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
-            <div class="bg-slate-100 p-4 rounded-xl flex flex-col">
+            <div class="bg-slate-100 dark:bg-slate-800/40 p-4 rounded-xl flex flex-col border border-transparent dark:border-slate-800">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-slate-700 flex items-center gap-2">📌 📋 รอดำเนินการ</h3>
-                    <span id="todo-count" class="bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                    <h3 class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">📌 📋 รอดำเนินการ</h3>
+                    <span id="todo-count" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
                 </div>
                 <div id="todo-list" class="kanban-column flex flex-col gap-3" ondragover="allowDrop(event)" ondrop="drop(event, 'todo')"></div>
             </div>
 
-            <div class="bg-emerald-50 p-4 rounded-xl flex flex-col">
+            <div class="bg-emerald-50 dark:bg-emerald-950/20 p-4 rounded-xl flex flex-col border border-transparent dark:border-emerald-900/30">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-emerald-800 flex items-center gap-2">✅ เสร็จสิ้น</h3>
-                    <span id="done-count" class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                    <h3 class="font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-2">✅ เสร็จสิ้น</h3>
+                    <span id="done-count" class="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
                 </div>
                 <div id="done-list" class="kanban-column flex flex-col gap-3" ondragover="allowDrop(event)" ondrop="drop(event, 'done')"></div>
             </div>
 
-            <div class="bg-amber-50 p-4 rounded-xl flex flex-col">
+            <div class="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-xl flex flex-col border border-transparent dark:border-amber-900/30">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-amber-800 flex items-center gap-2">✏️ แก้ไข</h3>
-                    <span id="edit-count" class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                    <h3 class="font-bold text-amber-800 dark:text-amber-400 flex items-center gap-2">✏️ แก้ไข</h3>
+                    <span id="edit-count" class="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
                 </div>
                 <div id="edit-list" class="kanban-column flex flex-col gap-3" ondragover="allowDrop(event)" ondrop="drop(event, 'edit')"></div>
             </div>
 
-            <div class="bg-sky-50 p-4 rounded-xl flex flex-col">
+            <div class="bg-sky-50 dark:bg-sky-950/20 p-4 rounded-xl flex flex-col border border-transparent dark:border-sky-900/30">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-sky-800 flex items-center gap-2">🎉 ตรวจผ่าน</h3>
-                    <span id="approved-count" class="bg-sky-100 text-sky-800 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                    <h3 class="font-bold text-sky-800 dark:text-sky-400 flex items-center gap-2">🎉 ตรวจผ่าน</h3>
+                    <span id="approved-count" class="bg-sky-100 dark:bg-sky-900/50 text-sky-800 dark:text-sky-300 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
                 </div>
                 <div id="approved-list" class="kanban-column flex flex-col gap-3" ondragover="allowDrop(event)" ondrop="drop(event, 'approved')"></div>
             </div>
@@ -113,56 +124,56 @@
         </div>
     </main>
 
-    <div id="taskModal" class="fixed inset-0 bg-black/50 z-40 hidden flex items-center justify-center p-4" onclick="closeModal()">
-        <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-start mb-4 border-b border-slate-100 pb-3">
+    <div id="taskModal" class="fixed inset-0 bg-black/60 z-40 hidden flex items-center justify-center p-4 shadow-2xl" onclick="closeModal()">
+        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-transparent dark:border-slate-700" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-start mb-4 border-b border-slate-100 dark:border-slate-700 pb-3">
                 <div>
-                    <h2 id="modalTitle" class="text-xl font-bold text-slate-800"></h2>
-                    <p id="modalAssignee" class="text-sm text-slate-500 mt-1"></p>
+                    <h2 id="modalTitle" class="text-xl font-bold"></h2>
+                    <p id="modalAssignee" class="text-sm text-slate-500 dark:text-slate-400 mt-1"></p>
                 </div>
-                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl font-bold cursor-pointer">&times;</button>
             </div>
             <div class="mb-4">
-                <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">รายละเอียดงาน</h4>
-                <p id="modalDesc" class="text-slate-700 whitespace-pre-wrap text-sm bg-slate-50 p-3 rounded-lg border border-slate-100 min-h-[60px]"></p>
+                <h4 class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">รายละเอียดงาน</h4>
+                <p id="modalDesc" class="whitespace-pre-wrap text-sm bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-100 dark:border-slate-800 min-h-[60px]"></p>
             </div>
             <div id="modalImageContainer" class="hidden">
-                <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">รูปภาพประกอบ</h4>
-                <img id="modalImage" src="" alt="Task Image" class="w-full rounded-lg border border-slate-200 max-h-[400px] object-contain bg-slate-50">
+                <h4 class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">รูปภาพประกอบ (คลิกที่รูปเพื่อขยายใหญ่)</h4>
+                <img id="modalImage" src="" alt="Task Image" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 max-h-[400px] object-contain bg-slate-50 dark:bg-slate-900 cursor-zoom-in hover:opacity-95 transition">
             </div>
         </div>
     </div>
 
-    <div id="editModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4" onclick="closeEditModal()">
-        <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-                <h2 class="text-lg font-bold text-slate-800">✏️ แก้ไขข้อมูลงาน</h2>
-                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
+    <div id="editModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 shadow-2xl" onclick="closeEditModal()">
+        <div class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-transparent dark:border-slate-700" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 dark:border-slate-700 pb-3">
+                <h2 class="text-lg font-bold">✏️ แก้ไขข้อมูลงาน</h2>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl font-bold cursor-pointer">&times;</button>
             </div>
             
             <input type="hidden" id="editTaskId">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div class="flex flex-col gap-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">ชื่องาน</label>
-                        <input type="text" id="editTaskTitle" class="w-full border border-slate-200 p-2 rounded-lg text-sm focus:outline-indigo-500">
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">ชื่องาน</label>
+                        <input type="text" id="editTaskTitle" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-lg text-sm focus:outline-indigo-500 dark:focus:outline-indigo-400">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">ผู้รับผิดชอบ</label>
-                        <input type="text" id="editTaskAssignee" class="w-full border border-slate-200 p-2 rounded-lg text-sm focus:outline-indigo-500">
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">ผู้รับผิดชอบ</label>
+                        <input type="text" id="editTaskAssignee" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-lg text-sm focus:outline-indigo-500 dark:focus:outline-indigo-400">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">คำอธิบายงาน</label>
-                        <textarea id="editTaskDesc" rows="4" class="w-full border border-slate-200 p-2 rounded-lg text-sm focus:outline-indigo-500 resize-none"></textarea>
+                        <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">คำอธิบายงาน</label>
+                        <textarea id="editTaskDesc" rows="4" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2 rounded-lg text-sm focus:outline-indigo-500 dark:focus:outline-indigo-400 resize-none"></textarea>
                     </div>
                 </div>
                 
                 <div class="flex flex-col">
-                    <label class="block text-xs font-semibold text-slate-500 mb-1">รูปภาพประกอบ (คลิกแล้วกด Ctrl+V เพื่อเปลี่ยนรูป)</label>
-                    <div id="editImagePasteArea" tabindex="0" class="image-preview-area flex-1 min-h-[180px] bg-slate-50 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer focus:outline-none">
-                        <div id="editPastePrompt" class="text-center text-slate-400 pointer-events-none">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">รูปภาพประกอบ (คลิกแล้วกด Ctrl+V เพื่อเปลี่ยนรูป)</label>
+                    <div id="editImagePasteArea" tabindex="0" class="image-preview-area flex-1 min-h-[180px] bg-slate-50 dark:bg-slate-900/30 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer focus:outline-none">
+                        <div id="editPastePrompt" class="text-center text-slate-400 dark:text-slate-500 pointer-events-none">
                             <p class="text-2xl mb-1">📸</p>
-                            <p class="text-xs font-medium">คลิกแล้วกด <kbd class="bg-slate-200 px-1 rounded text-slate-600 font-mono font-bold">Ctrl+V</kbd></p>
+                            <p class="text-xs font-medium">คลิกแล้วกด <kbd class="bg-slate-200 dark:bg-slate-700 px-1 rounded text-slate-600 dark:text-slate-300 font-mono font-bold">Ctrl+V</kbd></p>
                         </div>
                         <div id="editImagePreviewContainer" class="hidden w-full h-full relative flex items-center justify-center">
                             <img id="editImagePreview" src="" alt="Preview" class="max-h-[150px] rounded object-contain shadow-xs">
@@ -172,17 +183,45 @@
                 </div>
             </div>
             
-            <div class="flex justify-end gap-2 border-t border-slate-100 pt-3">
-                <button onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm rounded-lg transition cursor-pointer">ยกเลิก</button>
+            <div class="flex justify-end gap-2 border-t border-slate-100 dark:border-slate-700 pt-3">
+                <button onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-200 text-sm rounded-lg transition cursor-pointer">ยกเลิก</button>
                 <button onclick="saveTaskEdit()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition cursor-pointer shadow-xs">บันทึกการแก้ไข</button>
             </div>
         </div>
+    </div>
+
+    <div id="imageLightbox" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-4 cursor-zoom-out" onclick="closeLightbox()">
+        <img id="lightboxImage" src="" alt="Enlarged Image" class="max-w-full max-h-full rounded-lg shadow-2xl object-contain transition-transform duration-300">
     </div>
 
     <script>
         let tasks = JSON.parse(localStorage.getItem('my-tasks-v2')) || [];
         let pastedImageBase64 = "";
         let editPastedImageBase64 = "";
+
+        // --- ระบบเปิดปิด/ตรวจเช็กโหมดหน้าจอ มืด สว่าง (Dark/Light Mode) ---
+        // ตรวจสอบค่าธีมดั้งเดิมในระบบคอมฯ หรือที่เคยเซฟไว้ในเครื่อง
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.getElementById('themeBtn').innerHTML = "☀️ โหมดสว่าง";
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.getElementById('themeBtn').innerHTML = "🌙 โหมดมืด";
+        }
+
+        function toggleDarkMode() {
+            const btn = document.getElementById('themeBtn');
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                btn.innerHTML = "🌙 โหมดมืด";
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                btn.innerHTML = "☀️ โหมดสว่าง";
+            }
+        }
+        // -----------------------------------------------------------------
 
         // ดักจับ Ctrl+V สำหรับฟอร์มเพิ่มงานใหม่
         const pasteArea = document.getElementById('imagePasteArea');
@@ -220,19 +259,24 @@
             }
         }
 
-        // --- ส่วนเสริมฟังก์ชันจัดการลากวางรูปภาพภายนอกสำหรับฟอร์มเพิ่มงานใหม่ ---
+        // ฟังก์ชันจัดการลากวางรูปภาพภายนอกสำหรับฟอร์มเพิ่มงานใหม่
         function handleDragOver(e) {
             e.preventDefault();
             const area = document.getElementById('imagePasteArea');
             area.style.borderColor = "#4f46e5";
-            area.style.backgroundColor = "#f5f3ff";
+            // ตรวจเช็กธีมปัจจุบันเพื่อทำสีพื้นหลังตอนลากไฟล์มาวางให้เหมาะสม
+            if (document.documentElement.classList.contains('dark')) {
+                area.style.backgroundColor = "#1e1b4b";
+            } else {
+                area.style.backgroundColor = "#f5f3ff";
+            }
         }
 
         function handleDragLeave(e) {
             e.preventDefault();
             const area = document.getElementById('imagePasteArea');
-            area.style.borderColor = "#cbd5e1";
-            area.style.backgroundColor = "#f8fafc";
+            area.style.borderColor = "";
+            area.style.backgroundColor = "";
         }
 
         function handleFileDrop(e) {
@@ -254,7 +298,20 @@
                 }
             }
         }
-        // -------------------------------------------------------------
+
+        // ฟังก์ชันสำหรับกดคลิกที่รูปเพื่อขยายใหญ่ (Lightbox)
+        function openLightbox(src) {
+            const lightbox = document.getElementById('imageLightbox');
+            const lightboxImg = document.getElementById('lightboxImage');
+            lightboxImg.src = src;
+            lightbox.classList.remove('hidden');
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('imageLightbox');
+            lightbox.classList.add('hidden');
+            document.getElementById('lightboxImage').src = "";
+        }
 
         function displayPreview(base64Data, mode) {
             const prefix = mode === 'edit' ? 'edit' : '';
@@ -279,7 +336,6 @@
         }
 
         function renderTasks() {
-            // จัดเรียงออบเจกต์คอลัมน์ให้เป็นลำดับ: รอดำเนินการ, เสร็จสิ้น, แก้ไข, ตรวจผ่าน
             const columns = {
                 todo: document.getElementById('todo-list'),
                 done: document.getElementById('done-list'),
@@ -291,7 +347,8 @@
 
             tasks.forEach(task => {
                 const card = document.createElement('div');
-                card.className = 'bg-white p-4 rounded-lg shadow-xs border border-slate-100 cursor-grab active:cursor-grabbing hover:border-indigo-300 transition flex flex-col gap-2';
+                // ปรับคลาสการ์ดให้รองรับธีมมืดและสว่าง
+                card.className = 'bg-white dark:bg-slate-800 p-4 rounded-lg shadow-xs border border-slate-100 dark:border-slate-700/60 cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-500 transition flex flex-col gap-2';
                 card.draggable = true;
                 card.id = task.id;
                 card.ondragstart = (e) => e.dataTransfer.setData('text/plain', task.id);
@@ -299,21 +356,21 @@
                 
                 let imgHtml = "";
                 if (task.image) {
-                    imgHtml = `<img src="${task.image}" class="w-full h-24 object-cover rounded border border-slate-100 my-1" alt="thumbnail">`;
+                    imgHtml = `<img src="${task.image}" class="w-full h-24 object-cover rounded border border-slate-100 dark:border-slate-700 my-1" alt="thumbnail">`;
                 }
 
                 let descSnippet = task.desc ? task.desc.substring(0, 60) + (task.desc.length > 60 ? '...' : '') : 'ไม่มีคำอธิบาย';
 
                 card.innerHTML = `
                     <div class="flex-1">
-                        <h4 class="font-semibold text-slate-800 leading-tight">${task.title}</h4>
-                        <p class="text-xs text-slate-400 mt-1 line-clamp-2">${descSnippet}</p>
+                        <h4 class="font-semibold text-slate-800 dark:text-slate-100 leading-tight">${task.title}</h4>
+                        <p class="text-xs text-slate-400 dark:text-slate-400 mt-1 line-clamp-2">${descSnippet}</p>
                         ${imgHtml}
                     </div>
-                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-50 text-xs">
-                        <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-sm">👤 ${task.assignee || 'ไม่ระบุ'}</span>
+                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-50 dark:border-slate-700/50 text-xs">
+                        <span class="bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-sm">👤 ${task.assignee || 'ไม่ระบุ'}</span>
                         <div class="flex gap-2">
-                            <button onclick="openEditModal(event, '${task.id}')" class="text-indigo-600 hover:text-indigo-800 cursor-pointer font-medium">แก้ไข</button>
+                            <button onclick="openEditModal(event, '${task.id}')" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 cursor-pointer font-medium">แก้ไข</button>
                             <button onclick="deleteTask(event, '${task.id}')" class="text-rose-500 hover:text-rose-700 cursor-pointer font-medium">ลบ</button>
                         </div>
                     </div>
@@ -324,7 +381,6 @@
                 }
             });
 
-            // อัปเดตตัวนับจำนวนงานของทั้ง 4 สถานะให้ถูกต้องตรงล็อก
             if(document.getElementById('todo-count')) document.getElementById('todo-count').innerText = tasks.filter(t => t.status === 'todo').length;
             if(document.getElementById('done-count')) document.getElementById('done-count').innerText = tasks.filter(t => t.status === 'done').length;
             if(document.getElementById('edit-count')) document.getElementById('edit-count').innerText = tasks.filter(t => t.status === 'edit').length;
@@ -346,7 +402,7 @@
                 assignee: assigneeInput.value,
                 desc: descInput.value,
                 image: pastedImageBase64,
-                status: 'todo' // เริ่มต้นที่ช่อง รอดำเนินการเสมอ
+                status: 'todo'
             };
 
             tasks.push(newTask);
@@ -412,6 +468,7 @@
 
         function allowDrop(ev) { ev.preventDefault(); }
         
+        // ฟังก์ชันลากวางย้ายสลับคอลัมน์
         function drop(ev, targetStatus) {
             ev.preventDefault();
             const taskId = ev.dataTransfer.getData('text/plain');
@@ -428,12 +485,16 @@
             document.getElementById('modalDesc').innerText = task.desc || 'ไม่มีคำอธิบายงานเพิ่มเติม';
             
             const modalImgContainer = document.getElementById('modalImageContainer');
+            const modalImg = document.getElementById('modalImage');
+            
             if (task.image) {
                 modalImgContainer.classList.remove('hidden');
-                document.getElementById('modalImage').src = task.image;
+                modalImg.src = task.image;
+                modalImg.onclick = () => openLightbox(task.image);
             } else {
                 modalImgContainer.classList.add('hidden');
-                document.getElementById('modalImage').src = "";
+                modalImg.src = "";
+                modalImg.onclick = null;
             }
             document.getElementById('taskModal').classList.remove('hidden');
         }
