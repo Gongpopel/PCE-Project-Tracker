@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCE Task Manager</title>
+    <title>Our Task Manager (4 Columns - Live Sync)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .kanban-column { min-height: 450px; }
         .image-preview-area {
@@ -15,14 +16,14 @@
             border-color: #4f46e5;
         }
 
-        /* 🛠️ ส่วนจัดการธีมมืด (Dark Mode) ผ่าน CSS บังคับระบบ */
+        /* 🛠️ ระบบจัดการธีมมืด (Dark Mode) บังคับสไตล์ให้เนียนตา 100% */
         html.dark, .dark body {
-            background-color: #0f172a !important; /* สี Slate-900 */
+            background-color: #0f172a !important; /* สี Slate-900 มืดสนิททั้งหน้าจอ */
             color: #f8fafc !important;
         }
         
         .dark .bg-white {
-            background-color: #1e293b !important; /* สี Slate-800 */
+            background-color: #1e293b !important; /* สี Slate-800 สำหรับกล่องและ Pop-up */
             border-color: #334155 !important;
         }
         .dark h2, .dark h3, .dark h4 {
@@ -44,18 +45,18 @@
             border-color: #818cf8 !important;
         }
         
-        /* 🛠️ แก้ไขเพิ่มเติม: บังคับเปลี่ยนสีกล่องรายละเอียดงานและพื้นหลังรูปภาพใน Pop-up (Modal) */
+        /* แก้ไขสีกล่องรายละเอียดและพื้นหลังรูปภาพในหน้าต่างดูงาน (Pop-up) โหมดมืด */
         .dark #modalDesc {
-            background-color: #0f172a !important; /* เปลี่ยนกล่องรายละเอียดเป็นสีมืด */
+            background-color: #0f172a !important;
             border-color: #334155 !important;
-            color: #cbd5e1 !important; /* ปรับสีข้อความให้อ่านง่ายบนพื้นหลังมืด */
+            color: #cbd5e1 !important;
         }
         .dark #modalImage {
-            background-color: #0f172a !important; /* เปลี่ยนพื้นหลังรอบรูปภาพให้เป็นสีมืด */
+            background-color: #0f172a !important;
             border-color: #334155 !important;
         }
         
-        /* สีกรอบคอลัมน์ตอนโหมดมืด */
+        /* สีกรอบและพื้นหลังของทั้ง 4 คอลัมน์ตอนโหมดมืด */
         .dark .bg-slate-100 { background-color: rgba(30, 41, 59, 0.5) !important; border: 1px solid #334155; }
         .dark .bg-emerald-50 { background-color: rgba(6, 78, 59, 0.15) !important; border: 1px solid #064e3b; }
         .dark .bg-amber-50 { background-color: rgba(120, 53, 4, 0.15) !important; border: 1px solid #78350f; }
@@ -76,7 +77,7 @@
 
     <header class="bg-indigo-600 text-white p-4 shadow-md mb-8">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold">🚀 Project Tracker</h1>
+            <h1 class="text-xl font-bold">🚀 Project Tracker (เวอร์ชันออนไลน์เรียลไทม์)</h1>
             <div class="flex items-center gap-4">
                 <button onclick="toggleDarkMode()" id="themeBtn" class="flex items-center gap-2 bg-indigo-700 hover:bg-indigo-800 dark:bg-slate-800 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium transition cursor-pointer shadow-sm">
                     🌙 โหมดมืด
@@ -195,7 +196,7 @@
 
     <div id="editModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 shadow-2xl" onclick="closeEditModal()">
         <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-transparent" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pt-3">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
                 <h2 class="text-lg font-bold">✏️ แก้ไขข้อมูลงาน</h2>
                 <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
             </div>
@@ -244,10 +245,33 @@
     </div>
 
     <script>
-        let tasks = JSON.parse(localStorage.getItem('my-tasks-v2')) || [];
+        // 🛠️ พ่วงระบบฐานข้อมูลกลาง Supabase (หยอด URL ของคุณไว้ให้แล้วเรียบร้อยครับ)
+        const SUPABASE_URL = "https://iweyopkcoohqzncdrrbu.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_EIscNYzdYSBL5YFnP4CSMw_MWv_OUjB";
+        
+        // แก้ไขโครงสร้างไวยากรณ์สลับตัวใหญ่ตัวเล็ก (S ใหญ่) เพื่อแก้บั๊กเรียบร้อยครับ
+        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let tasks = [];
         let pastedImageBase64 = "";
         let editPastedImageBase64 = "";
 
+        // ฟังก์ชันดึงข้อมูลงานจากฐานข้อมูลคลาวด์ออนไลน์มาอัปเดตหน้าจอ
+        async function fetchTasksOnline() {
+            const { data, error } = await supabase.from('tasks').select('*').order('created_at', { ascending: true });
+            if (!error && data) {
+                tasks = data.map(item => ({
+                    id: item.id,
+                    title: item.title,
+                    assignee: item.assignee,
+                    desc: item.description,
+                    image: item.image,
+                    status: item.status
+                }));
+                renderTasks();
+            }
+        }
+
+        // ระบบเปลี่ยนธีมมืดสว่างระดับสูงสุดผ่านแท็ก HTML
         function applyTheme(theme) {
             const btn = document.getElementById('themeBtn');
             if (theme === 'dark') {
@@ -350,6 +374,7 @@
             }
         }
 
+        // ระบบซูมขยายรูปภาพ Lightbox
         function openLightbox(src) {
             const lightbox = document.getElementById('imageLightbox');
             const lightboxImg = document.getElementById('lightboxImage');
@@ -434,33 +459,36 @@
             if(document.getElementById('done-count')) document.getElementById('done-count').innerText = tasks.filter(t => t.status === 'done').length;
             if(document.getElementById('edit-count')) document.getElementById('edit-count').innerText = tasks.filter(t => t.status === 'edit').length;
             if(document.getElementById('approved-count')) document.getElementById('approved-count').innerText = tasks.filter(t => t.status === 'approved').length;
-
-            localStorage.setItem('my-tasks-v2', JSON.stringify(tasks));
         }
 
-        function addNewTask() {
+        // เพิ่มงานออนไลน์เข้าคลาวด์ Supabase
+        async function addNewTask() {
             const titleInput = document.getElementById('taskTitle');
             const assigneeInput = document.getElementById('taskAssignee');
             const descInput = document.getElementById('taskDesc');
 
             if (!titleInput.value.trim()) return alert('กรุณากรอกชื่องานด้วยครับ');
 
+            const id = 'task-' + Date.now();
             const newTask = {
-                id: 'task-' + Date.now(),
+                id: id,
                 title: titleInput.value,
                 assignee: assigneeInput.value,
-                desc: descInput.value,
+                description: descInput.value,
                 image: pastedImageBase64,
                 status: 'todo'
             };
 
-            tasks.push(newTask);
-            renderTasks();
-
-            titleInput.value = '';
-            assigneeInput.value = '';
-            descInput.value = '';
-            clearPastedImage(null, 'add');
+            const { error } = await supabase.from('tasks').insert([newTask]);
+            if (!error) {
+                titleInput.value = '';
+                assigneeInput.value = '';
+                descInput.value = '';
+                clearPastedImage(null, 'add');
+                fetchTasksOnline();
+            } else {
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูลออนไลน์');
+            }
         }
 
         function openEditModal(event, id) {
@@ -487,7 +515,8 @@
             document.getElementById('editModal').classList.add('hidden');
         }
 
-        function saveTaskEdit() {
+        // สั่งอัปเดตแก้งานบนระบบออนไลน์
+        async function saveTaskEdit() {
             const id = document.getElementById('editTaskId').value;
             const title = document.getElementById('editTaskTitle').value;
             const assignee = document.getElementById('editTaskAssignee').value;
@@ -495,35 +524,44 @@
 
             if (!title.trim()) return alert('ชื่องานห้ามว่างครับ');
 
-            const task = tasks.find(t => t.id === id);
-            if (task) {
-                task.title = title;
-                task.assignee = assignee;
-                task.desc = desc;
-                task.image = editPastedImageBase64;
-                
-                renderTasks();
+            const { error } = await supabase.from('tasks').update({
+                title: title,
+                assignee: assignee,
+                description: desc,
+                image: editPastedImageBase64
+            }).eq('id', id);
+
+            if (!error) {
                 closeEditModal();
+                fetchTasksOnline();
+            } else {
+                alert('ไม่สามารถแก้ไขข้อมูลออนไลน์ได้');
             }
         }
 
-        function deleteTask(event, id) {
+        // สั่งลบงานบนฐานข้อมูลคลาวด์
+        async function deleteTask(event, id) {
             event.stopPropagation();
             if (confirm('คุณต้องการลบงานนี้ใช่หรือไม่?')) {
-                tasks = tasks.filter(t => t.id !== id);
-                renderTasks();
+                const { error } = await supabase.from('tasks').delete().eq('id', id);
+                if (!error) {
+                    fetchTasksOnline();
+                } else {
+                    alert('ไม่สามารถลบข้อมูลบนออนไลน์ได้');
+                }
             }
         }
 
         function allowDrop(ev) { ev.preventDefault(); }
         
-        function drop(ev, targetStatus) {
+        // อัปเดตสถานะออนไลน์ทันทีเมื่อลากการ์ดย้ายสลับคอลัมน์
+        async function drop(ev, targetStatus) {
             ev.preventDefault();
             const taskId = ev.dataTransfer.getData('text/plain');
-            const task = tasks.find(t => t.id === taskId);
-            if (task) {
-                task.status = targetStatus;
-                renderTasks();
+            
+            const { error } = await supabase.from('tasks').update({ status: targetStatus }).eq('id', taskId);
+            if (!error) {
+                fetchTasksOnline();
             }
         }
 
@@ -551,7 +589,11 @@
             document.getElementById('taskModal').classList.add('hidden');
         }
 
-        renderTasks();
+        // โหลดข้อมูลจากคลาวด์ทันทีเมื่อเปิดแอป
+        fetchTasksOnline();
+
+        // 🌟 ตั้งเวลาให้ตัวแอปดึงข้อมูลใหม่จากคลาวด์โดยอัตโนมัติทุกๆ 5 วินาที เพื่อให้หน้าจอซิงค์กับเพื่อนๆ เสมอ
+        setInterval(fetchTasksOnline, 5000);
     </script>
 </body>
 </html>
