@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Our Task Manager (4 Columns - Live Sync)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <style>
         .kanban-column { min-height: 450px; }
         .image-preview-area {
@@ -16,14 +16,14 @@
             border-color: #4f46e5;
         }
 
-        /* 🛠️ ระบบจัดการธีมมืด (Dark Mode) บังคับสไตล์ให้เนียนตา 100% */
+        /* ระบบจัดการธีมมืด (Dark Mode) บังคับสไตล์ให้เนียนตา 100% */
         html.dark, .dark body {
-            background-color: #0f172a !important; /* สี Slate-900 มืดสนิททั้งหน้าจอ */
+            background-color: #0f172a !important; 
             color: #f8fafc !important;
         }
         
         .dark .bg-white {
-            background-color: #1e293b !important; /* สี Slate-800 สำหรับกล่องและ Pop-up */
+            background-color: #1e293b !important; 
             border-color: #334155 !important;
         }
         .dark h2, .dark h3, .dark h4 {
@@ -45,7 +45,6 @@
             border-color: #818cf8 !important;
         }
         
-        /* แก้ไขสีกล่องรายละเอียดและพื้นหลังรูปภาพในหน้าต่างดูงาน (Pop-up) โหมดมืด */
         .dark #modalDesc {
             background-color: #0f172a !important;
             border-color: #334155 !important;
@@ -56,13 +55,11 @@
             border-color: #334155 !important;
         }
         
-        /* สีกรอบและพื้นหลังของทั้ง 4 คอลัมน์ตอนโหมดมืด */
         .dark .bg-slate-100 { background-color: rgba(30, 41, 59, 0.5) !important; border: 1px solid #334155; }
         .dark .bg-emerald-50 { background-color: rgba(6, 78, 59, 0.15) !important; border: 1px solid #064e3b; }
         .dark .bg-amber-50 { background-color: rgba(120, 53, 4, 0.15) !important; border: 1px solid #78350f; }
         .dark .bg-sky-50 { background-color: rgba(12, 74, 96, 0.15) !important; border: 1px solid #0c4a60; }
         
-        /* สีตัวอักษรหัวคอลัมน์โหมดมืด */
         .dark .text-slate-700 { color: #cbd5e1 !important; }
         .dark .text-emerald-800 { color: #34d399 !important; }
         .dark .text-amber-800 { color: #fbbf24 !important; }
@@ -196,7 +193,7 @@
 
     <div id="editModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 shadow-2xl" onclick="closeEditModal()">
         <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-transparent" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pt-3">
                 <h2 class="text-lg font-bold">✏️ แก้ไขข้อมูลงาน</h2>
                 <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
             </div>
@@ -245,19 +242,18 @@
     </div>
 
     <script>
-        // 🛠️ พ่วงระบบฐานข้อมูลกลาง Supabase (หยอด URL ของคุณไว้ให้แล้วเรียบร้อยครับ)
+        // ใส่ค่าจริงจากโปรเจกต์ของคุณให้เรียบร้อยแล้วครับ
         const SUPABASE_URL = "https://iweyopkcoohqzncdrrbu.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_EIscNYzdYSBL5YFnP4CSMw_MWv_OUjB";
         
-        // แก้ไขโครงสร้างไวยากรณ์สลับตัวใหญ่ตัวเล็ก (S ใหญ่) เพื่อแก้บั๊กเรียบร้อยครับ
-        const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // แก้ไขไวยากรณ์ s ตัวเล็กให้เรียบร้อยเพื่อปลดล็อกปัญหาทั้งหมด
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let tasks = [];
         let pastedImageBase64 = "";
         let editPastedImageBase64 = "";
 
-        // ฟังก์ชันดึงข้อมูลงานจากฐานข้อมูลคลาวด์ออนไลน์มาอัปเดตหน้าจอ
         async function fetchTasksOnline() {
-            const { data, error } = await supabase.from('tasks').select('*').order('created_at', { ascending: true });
+            const { data, error } = await supabaseClient.from('tasks').select('*').order('created_at', { ascending: true });
             if (!error && data) {
                 tasks = data.map(item => ({
                     id: item.id,
@@ -271,7 +267,6 @@
             }
         }
 
-        // ระบบเปลี่ยนธีมมืดสว่างระดับสูงสุดผ่านแท็ก HTML
         function applyTheme(theme) {
             const btn = document.getElementById('themeBtn');
             if (theme === 'dark') {
@@ -293,7 +288,6 @@
             applyTheme(currentTheme);
         }
 
-        // ดักจับ Ctrl+V สำหรับฟอร์มเพิ่มงานใหม่
         const pasteArea = document.getElementById('imagePasteArea');
         if(pasteArea) {
             pasteArea.addEventListener('paste', function(e) {
@@ -305,7 +299,6 @@
             pasteArea.addEventListener('click', () => pasteArea.focus());
         }
 
-        // ดักจับ Ctrl+V สำหรับฟอร์มแก้ไขงาน
         const editPasteArea = document.getElementById('editImagePasteArea');
         if(editPasteArea) {
             editPasteArea.addEventListener('paste', function(e) {
@@ -374,7 +367,6 @@
             }
         }
 
-        // ระบบซูมขยายรูปภาพ Lightbox
         function openLightbox(src) {
             const lightbox = document.getElementById('imageLightbox');
             const lightboxImg = document.getElementById('lightboxImage');
@@ -461,7 +453,6 @@
             if(document.getElementById('approved-count')) document.getElementById('approved-count').innerText = tasks.filter(t => t.status === 'approved').length;
         }
 
-        // เพิ่มงานออนไลน์เข้าคลาวด์ Supabase
         async function addNewTask() {
             const titleInput = document.getElementById('taskTitle');
             const assigneeInput = document.getElementById('taskAssignee');
@@ -479,7 +470,7 @@
                 status: 'todo'
             };
 
-            const { error } = await supabase.from('tasks').insert([newTask]);
+            const { error } = await supabaseClient.from('tasks').insert([newTask]);
             if (!error) {
                 titleInput.value = '';
                 assigneeInput.value = '';
@@ -515,7 +506,6 @@
             document.getElementById('editModal').classList.add('hidden');
         }
 
-        // สั่งอัปเดตแก้งานบนระบบออนไลน์
         async function saveTaskEdit() {
             const id = document.getElementById('editTaskId').value;
             const title = document.getElementById('editTaskTitle').value;
@@ -524,7 +514,7 @@
 
             if (!title.trim()) return alert('ชื่องานห้ามว่างครับ');
 
-            const { error } = await supabase.from('tasks').update({
+            const { error } = await supabaseClient.from('tasks').update({
                 title: title,
                 assignee: assignee,
                 description: desc,
@@ -539,11 +529,10 @@
             }
         }
 
-        // สั่งลบงานบนฐานข้อมูลคลาวด์
         async function deleteTask(event, id) {
             event.stopPropagation();
             if (confirm('คุณต้องการลบงานนี้ใช่หรือไม่?')) {
-                const { error } = await supabase.from('tasks').delete().eq('id', id);
+                const { error } = await supabaseClient.from('tasks').delete().eq('id', id);
                 if (!error) {
                     fetchTasksOnline();
                 } else {
@@ -554,12 +543,11 @@
 
         function allowDrop(ev) { ev.preventDefault(); }
         
-        // อัปเดตสถานะออนไลน์ทันทีเมื่อลากการ์ดย้ายสลับคอลัมน์
         async function drop(ev, targetStatus) {
             ev.preventDefault();
             const taskId = ev.dataTransfer.getData('text/plain');
             
-            const { error } = await supabase.from('tasks').update({ status: targetStatus }).eq('id', taskId);
+            const { error } = await supabaseClient.from('tasks').update({ status: targetStatus }).eq('id', taskId);
             if (!error) {
                 fetchTasksOnline();
             }
@@ -589,10 +577,7 @@
             document.getElementById('taskModal').classList.add('hidden');
         }
 
-        // โหลดข้อมูลจากคลาวด์ทันทีเมื่อเปิดแอป
         fetchTasksOnline();
-
-        // 🌟 ตั้งเวลาให้ตัวแอปดึงข้อมูลใหม่จากคลาวด์โดยอัตโนมัติทุกๆ 5 วินาที เพื่อให้หน้าจอซิงค์กับเพื่อนๆ เสมอ
         setInterval(fetchTasksOnline, 5000);
     </script>
 </body>
