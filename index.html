@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Task Manager (4 Columns)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .kanban-column { min-height: 450px; }
+        .image-preview-area {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.2s ease;
+        }
+        .image-preview-area:focus {
+            border-color: #4f46e5;
+            background-color: #f5f3ff;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans min-h-screen">
+
+    <header class="bg-indigo-600 text-white p-4 shadow-md mb-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">🚀 Project Tracker (เวอร์ชัน 4 คอลัมน์)</h1>
+            <span class="text-sm bg-indigo-700 px-3 py-1 rounded-full">PCE Project</span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4">
+        
+        <div class="bg-white p-6 rounded-xl shadow-sm mb-8">
+            <h2 class="text-lg font-semibold mb-4 text-slate-700">➕ เพิ่มงานใหม่</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">ชื่องาน</label>
+                        <input type="text" id="taskTitle" placeholder="ชื่องาน เช่น ออกแบบหน้าแรก, แก้บั๊ก..." class="w-full border border-slate-200 p-2.5 rounded-lg focus:outline-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">ผู้รับผิดชอบ</label>
+                        <input type="text" id="taskAssignee" placeholder="ระบุชื่อ..." class="w-full border border-slate-200 p-2.5 rounded-lg focus:outline-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">คำอธิบายงาน (Task Description)</label>
+                        <textarea id="taskDesc" rows="4" placeholder="รายละเอียดงาน ขั้นตอนการทำ หรือโน้ตเพิ่มเติม..." class="w-full border border-slate-200 p-2.5 rounded-lg focus:outline-indigo-500 text-sm resize-none"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex flex-col">
+                    <label class="block text-sm font-medium text-slate-600 mb-1">วางรูปภาพประกอบ (คลิกแล้วกด Ctrl+V หรือลากไฟล์มาวางที่นี่)</label>
+                    <div id="imagePasteArea" tabindex="0" 
+                         class="image-preview-area flex-1 min-h-[180px] bg-slate-50 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer focus:outline-none"
+                         ondragover="handleDragOver(event)" 
+                         ondragleave="handleDragLeave(event)" 
+                         ondrop="handleFileDrop(event)">
+                        
+                        <div id="pastePrompt" class="text-center text-slate-400 pointer-events-none">
+                            <p class="text-3xl mb-2">📸</p>
+                            <p class="text-sm font-medium">กด <kbd class="bg-slate-200 px-1.5 py-0.5 rounded text-xs text-slate-600 font-mono font-bold">Ctrl + V</kbd> หรือ <span class="font-bold text-indigo-500">ลากรูปภาพมาวาง</span></p>
+                            <p class="text-xs mt-1 text-slate-400">เพื่อวางภาพจาก Clipboard หรือหน้าจอที่แคปมา</p>
+                        </div>
+                        
+                        <div id="imagePreviewContainer" class="hidden w-full h-full relative flex items-center justify-center">
+                            <img id="imagePreview" src="" alt="Preview" class="max-h-[180px] rounded object-contain shadow-xs">
+                            <button onclick="clearPastedImage(event, 'add')" class="absolute top-0 right-0 bg-rose-500 text-white p-1 rounded-full text-xs hover:bg-rose-600 cursor-pointer w-6 h-6 flex items-center justify-center font-bold" title="ลบรูปภาพ">×</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="addNewTask()" class="w-full md:w-auto px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition text-sm cursor-pointer shadow-sm">
+                    🚀 บันทึกงานเข้าบอร์ด
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <div class="bg-slate-100 p-4 rounded-xl flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-slate-700 flex items-center gap-2">📌 📋 รอดำเนินการ</h3>
+                    <span id="todo-count" class="bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </div>
+                <div id="todo-list" class="kanban-column flex flex-col gap-3" ondragover="allowDrop(event)" ondrop="drop(event, 'todo')"></div>
+            </div>
+
+            <div class="bg-emerald-50 p-4 rounded-xl flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-emerald-800 flex items-center gap-2">✅ เสร็จสิ้น</h3>
+                    <span id="done-count" class="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </div>
+                <div id="done-list" class="kanban-column flex flex-col gap-3" ondragover="allowDrop(event)" ondrop="drop(event, 'done')"></div>
+            </div>
+
+            <div class="bg-amber-50 p-4 rounded-xl flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-amber-800 flex items-center gap-2">✏️ แก้ไข</h3>
+                    <span id="edit-count" class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </div>
+                <div id="edit-list" class="kanban-column flex flex-col gap-3" ondragover="allowDrop(event)" ondrop="drop(event, 'edit')"></div>
+            </div>
+
+            <div class="bg-sky-50 p-4 rounded-xl flex flex-col">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-sky-800 flex items-center gap-2">🎉 ตรวจผ่าน</h3>
+                    <span id="approved-count" class="bg-sky-100 text-sky-800 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </div>
+                <div id="approved-list" class="kanban-column flex flex-col gap-3" ondragover="allowDrop(event)" ondrop="drop(event, 'approved')"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="taskModal" class="fixed inset-0 bg-black/50 z-40 hidden flex items-center justify-center p-4" onclick="closeModal()">
+        <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-start mb-4 border-b border-slate-100 pb-3">
+                <div>
+                    <h2 id="modalTitle" class="text-xl font-bold text-slate-800"></h2>
+                    <p id="modalAssignee" class="text-sm text-slate-500 mt-1"></p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+            <div class="mb-4">
+                <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">รายละเอียดงาน</h4>
+                <p id="modalDesc" class="text-slate-700 whitespace-pre-wrap text-sm bg-slate-50 p-3 rounded-lg border border-slate-100 min-h-[60px]"></p>
+            </div>
+            <div id="modalImageContainer" class="hidden">
+                <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">รูปภาพประกอบ</h4>
+                <img id="modalImage" src="" alt="Task Image" class="w-full rounded-lg border border-slate-200 max-h-[400px] object-contain bg-slate-50">
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4" onclick="closeEditModal()">
+        <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                <h2 class="text-lg font-bold text-slate-800">✏️ แก้ไขข้อมูลงาน</h2>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
+            </div>
+            
+            <input type="hidden" id="editTaskId">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div class="flex flex-col gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">ชื่องาน</label>
+                        <input type="text" id="editTaskTitle" class="w-full border border-slate-200 p-2 rounded-lg text-sm focus:outline-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">ผู้รับผิดชอบ</label>
+                        <input type="text" id="editTaskAssignee" class="w-full border border-slate-200 p-2 rounded-lg text-sm focus:outline-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">คำอธิบายงาน</label>
+                        <textarea id="editTaskDesc" rows="4" class="w-full border border-slate-200 p-2 rounded-lg text-sm focus:outline-indigo-500 resize-none"></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">รูปภาพประกอบ (คลิกแล้วกด Ctrl+V เพื่อเปลี่ยนรูป)</label>
+                    <div id="editImagePasteArea" tabindex="0" class="image-preview-area flex-1 min-h-[180px] bg-slate-50 rounded-lg flex flex-col items-center justify-center p-4 cursor-pointer focus:outline-none">
+                        <div id="editPastePrompt" class="text-center text-slate-400 pointer-events-none">
+                            <p class="text-2xl mb-1">📸</p>
+                            <p class="text-xs font-medium">คลิกแล้วกด <kbd class="bg-slate-200 px-1 rounded text-slate-600 font-mono font-bold">Ctrl+V</kbd></p>
+                        </div>
+                        <div id="editImagePreviewContainer" class="hidden w-full h-full relative flex items-center justify-center">
+                            <img id="editImagePreview" src="" alt="Preview" class="max-h-[150px] rounded object-contain shadow-xs">
+                            <button onclick="clearPastedImage(event, 'edit')" class="absolute top-0 right-0 bg-rose-500 text-white p-1 rounded-full text-xs hover:bg-rose-600 cursor-pointer w-5 h-5 flex items-center justify-center font-bold">×</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-2 border-t border-slate-100 pt-3">
+                <button onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm rounded-lg transition cursor-pointer">ยกเลิก</button>
+                <button onclick="saveTaskEdit()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition cursor-pointer shadow-xs">บันทึกการแก้ไข</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('my-tasks-v2')) || [];
+        let pastedImageBase64 = "";
+        let editPastedImageBase64 = "";
+
+        // ดักจับ Ctrl+V สำหรับฟอร์มเพิ่มงานใหม่
+        const pasteArea = document.getElementById('imagePasteArea');
+        pasteArea.addEventListener('paste', function(e) {
+            handlePaste(e, (base64) => {
+                pastedImageBase64 = base64;
+                displayPreview(pastedImageBase64, 'add');
+            });
+        });
+        pasteArea.addEventListener('click', () => pasteArea.focus());
+
+        // ดักจับ Ctrl+V สำหรับฟอร์มแก้ไขงาน
+        const editPasteArea = document.getElementById('editImagePasteArea');
+        editPasteArea.addEventListener('paste', function(e) {
+            handlePaste(e, (base64) => {
+                editPastedImageBase64 = base64;
+                displayPreview(editPastedImageBase64, 'edit');
+            });
+        });
+        editPasteArea.addEventListener('click', () => editPasteArea.focus());
+
+        function handlePaste(e, callback) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const blob = items[i].getAsFile();
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        callback(event.target.result);
+                    };
+                    reader.readAsDataURL(blob);
+                    e.preventDefault();
+                    break;
+                }
+            }
+        }
+
+        // --- ส่วนเสริมฟังก์ชันจัดการลากวางรูปภาพภายนอกสำหรับฟอร์มเพิ่มงานใหม่ ---
+        function handleDragOver(e) {
+            e.preventDefault();
+            const area = document.getElementById('imagePasteArea');
+            area.style.borderColor = "#4f46e5";
+            area.style.backgroundColor = "#f5f3ff";
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            const area = document.getElementById('imagePasteArea');
+            area.style.borderColor = "#cbd5e1";
+            area.style.backgroundColor = "#f8fafc";
+        }
+
+        function handleFileDrop(e) {
+            e.preventDefault();
+            handleDragLeave(e);
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.indexOf('image') !== -1) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        pastedImageBase64 = event.target.result;
+                        displayPreview(pastedImageBase64, 'add');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('กรุณาวางเฉพาะไฟล์รูปภาพเท่านั้นครับ');
+                }
+            }
+        }
+        // -------------------------------------------------------------
+
+        function displayPreview(base64Data, mode) {
+            const prefix = mode === 'edit' ? 'edit' : '';
+            document.getElementById(prefix ? 'editPastePrompt' : 'pastePrompt').classList.add('hidden');
+            document.getElementById(prefix ? 'editImagePreviewContainer' : 'imagePreviewContainer').classList.remove('hidden');
+            document.getElementById(prefix ? 'editImagePreview' : 'imagePreview').src = base64Data;
+        }
+
+        function clearPastedImage(event, mode) {
+            if (event) event.stopPropagation();
+            if (mode === 'edit') {
+                editPastedImageBase64 = "";
+                document.getElementById('editImagePreview').src = "";
+                document.getElementById('editImagePreviewContainer').classList.add('hidden');
+                document.getElementById('editPastePrompt').classList.remove('hidden');
+            } else {
+                pastedImageBase64 = "";
+                document.getElementById('imagePreview').src = "";
+                document.getElementById('imagePreviewContainer').classList.add('hidden');
+                document.getElementById('pastePrompt').classList.remove('hidden');
+            }
+        }
+
+        function renderTasks() {
+            // จัดเรียงออบเจกต์คอลัมน์ให้เป็นลำดับ: รอดำเนินการ, เสร็จสิ้น, แก้ไข, ตรวจผ่าน
+            const columns = {
+                todo: document.getElementById('todo-list'),
+                done: document.getElementById('done-list'),
+                edit: document.getElementById('edit-list'),
+                approved: document.getElementById('approved-list')
+            };
+            
+            Object.values(columns).forEach(col => { if(col) col.innerHTML = ''; });
+
+            tasks.forEach(task => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-lg shadow-xs border border-slate-100 cursor-grab active:cursor-grabbing hover:border-indigo-300 transition flex flex-col gap-2';
+                card.draggable = true;
+                card.id = task.id;
+                card.ondragstart = (e) => e.dataTransfer.setData('text/plain', task.id);
+                card.onclick = () => openModal(task);
+                
+                let imgHtml = "";
+                if (task.image) {
+                    imgHtml = `<img src="${task.image}" class="w-full h-24 object-cover rounded border border-slate-100 my-1" alt="thumbnail">`;
+                }
+
+                let descSnippet = task.desc ? task.desc.substring(0, 60) + (task.desc.length > 60 ? '...' : '') : 'ไม่มีคำอธิบาย';
+
+                card.innerHTML = `
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-slate-800 leading-tight">${task.title}</h4>
+                        <p class="text-xs text-slate-400 mt-1 line-clamp-2">${descSnippet}</p>
+                        ${imgHtml}
+                    </div>
+                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-slate-50 text-xs">
+                        <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-sm">👤 ${task.assignee || 'ไม่ระบุ'}</span>
+                        <div class="flex gap-2">
+                            <button onclick="openEditModal(event, '${task.id}')" class="text-indigo-600 hover:text-indigo-800 cursor-pointer font-medium">แก้ไข</button>
+                            <button onclick="deleteTask(event, '${task.id}')" class="text-rose-500 hover:text-rose-700 cursor-pointer font-medium">ลบ</button>
+                        </div>
+                    </div>
+                `;
+                
+                if (columns[task.status]) {
+                    columns[task.status].appendChild(card);
+                }
+            });
+
+            // อัปเดตตัวนับจำนวนงานของทั้ง 4 สถานะให้ถูกต้องตรงล็อก
+            if(document.getElementById('todo-count')) document.getElementById('todo-count').innerText = tasks.filter(t => t.status === 'todo').length;
+            if(document.getElementById('done-count')) document.getElementById('done-count').innerText = tasks.filter(t => t.status === 'done').length;
+            if(document.getElementById('edit-count')) document.getElementById('edit-count').innerText = tasks.filter(t => t.status === 'edit').length;
+            if(document.getElementById('approved-count')) document.getElementById('approved-count').innerText = tasks.filter(t => t.status === 'approved').length;
+
+            localStorage.setItem('my-tasks-v2', JSON.stringify(tasks));
+        }
+
+        function addNewTask() {
+            const titleInput = document.getElementById('taskTitle');
+            const assigneeInput = document.getElementById('taskAssignee');
+            const descInput = document.getElementById('taskDesc');
+
+            if (!titleInput.value.trim()) return alert('กรุณากรอกชื่องานด้วยครับ');
+
+            const newTask = {
+                id: 'task-' + Date.now(),
+                title: titleInput.value,
+                assignee: assigneeInput.value,
+                desc: descInput.value,
+                image: pastedImageBase64,
+                status: 'todo' // เริ่มต้นที่ช่อง รอดำเนินการเสมอ
+            };
+
+            tasks.push(newTask);
+            renderTasks();
+
+            titleInput.value = '';
+            assigneeInput.value = '';
+            descInput.value = '';
+            clearPastedImage(null, 'add');
+        }
+
+        function openEditModal(event, id) {
+            event.stopPropagation();
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            document.getElementById('editTaskId').value = task.id;
+            document.getElementById('editTaskTitle').value = task.title;
+            document.getElementById('editTaskAssignee').value = task.assignee || '';
+            document.getElementById('editTaskDesc').value = task.desc || '';
+            
+            if (task.image) {
+                editPastedImageBase64 = task.image;
+                displayPreview(task.image, 'edit');
+            } else {
+                clearPastedImage(null, 'edit');
+            }
+
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+
+        function saveTaskEdit() {
+            const id = document.getElementById('editTaskId').value;
+            const title = document.getElementById('editTaskTitle').value;
+            const assignee = document.getElementById('editTaskAssignee').value;
+            const desc = document.getElementById('editTaskDesc').value;
+
+            if (!title.trim()) return alert('ชื่องานห้ามว่างครับ');
+
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.title = title;
+                task.assignee = assignee;
+                task.desc = desc;
+                task.image = editPastedImageBase64;
+                
+                renderTasks();
+                closeEditModal();
+            }
+        }
+
+        function deleteTask(event, id) {
+            event.stopPropagation();
+            if (confirm('คุณต้องการลบงานนี้ใช่หรือไม่?')) {
+                tasks = tasks.filter(t => t.id !== id);
+                renderTasks();
+            }
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+        
+        function drop(ev, targetStatus) {
+            ev.preventDefault();
+            const taskId = ev.dataTransfer.getData('text/plain');
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = targetStatus;
+                renderTasks();
+            }
+        }
+
+        function openModal(task) {
+            document.getElementById('modalTitle').innerText = task.title;
+            document.getElementById('modalAssignee').innerText = `ผู้รับผิดชอบ: ${task.assignee || 'ไม่ระบุ'}`;
+            document.getElementById('modalDesc').innerText = task.desc || 'ไม่มีคำอธิบายงานเพิ่มเติม';
+            
+            const modalImgContainer = document.getElementById('modalImageContainer');
+            if (task.image) {
+                modalImgContainer.classList.remove('hidden');
+                document.getElementById('modalImage').src = task.image;
+            } else {
+                modalImgContainer.classList.add('hidden');
+                document.getElementById('modalImage').src = "";
+            }
+            document.getElementById('taskModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+        }
+
+        renderTasks();
+    </script>
+</body>
+</html>
