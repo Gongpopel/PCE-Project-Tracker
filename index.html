@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCE Task Manager</title>
+    <title>PCE Task Manager (4 Columns - Live Sync v2)</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <style>
@@ -242,15 +242,17 @@
     </div>
 
     <script>
-        // ใส่ค่าจริงจากโปรเจกต์ของคุณให้เรียบร้อยแล้วครับ
+        // ผูกลิงก์และกุญแจโปรเจกต์จริงของคุณ เคลียร์ปัญหาอักษรเล็ก-ใหญ่เรียบร้อย 
         const SUPABASE_URL = "https://iweyopkcoohqzncdrrbu.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_EIscNYzdYSBL5YFnP4CSMw_MWv_OUjB";
+        const SUPABASE_ANON_KEY = "sb_publishable_EiScNYzdYSBL5YFnP4CSMw_MWv_OUjB";
         
-        // แก้ไขไวยากรณ์ s ตัวเล็กให้เรียบร้อยเพื่อปลดล็อกปัญหาทั้งหมด
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let tasks = [];
-        let pastedImageBase64 = "";
-        let editPastedImageBase64 = "";
+        
+        // ตัวแปรเก็บไฟล์รูปภาพดิบ (Blob/File) แทนการแปลงเป็น Base64
+        let selectedFileBlob = null;
+        let editSelectedFileBlob = null;
+        let isImageClearedOrChanged = false;
 
         async function fetchTasksOnline() {
             const { data, error } = await supabaseClient.from('tasks').select('*').order('created_at', { ascending: true });
@@ -265,6 +267,29 @@
                 }));
                 renderTasks();
             }
+        }
+
+        // ฟังก์ชันช่วยอัปโหลดไฟล์ดิบเข้าสู่ Supabase Storage Bucket
+        async function uploadToStorage(fileBlob, taskId) {
+            if (!fileBlob) return null;
+            const fileExt = fileBlob.type.split('/')[1] || 'png';
+            const fileName = `${taskId}-${Date.now()}.${fileExt}`;
+            
+            const { data, error } = await supabaseClient.storage
+                .from('task-images')
+                .upload(fileName, fileBlob, { cacheControl: '3600', upsert: true });
+                
+            if (error) {
+                console.error("Storage Upload Error:", error);
+                return null;
+            }
+            
+            // สร้าง Public URL เพื่อนำมาเปิดดูรูปบนหน้าจอเว็บ
+            const { data: urlData } = supabaseClient.storage
+                .from('task-images')
+                .getPublicUrl(fileName);
+                
+            return urlData.publicUrl;
         }
 
         function applyTheme(theme) {
@@ -291,9 +316,9 @@
         const pasteArea = document.getElementById('imagePasteArea');
         if(pasteArea) {
             pasteArea.addEventListener('paste', function(e) {
-                handlePaste(e, (base64) => {
-                    pastedImageBase64 = base64;
-                    displayPreview(pastedImageBase64, 'add');
+                handlePaste(e, (blob, base64) => {
+                    selectedFileBlob = blob;
+                    displayPreview(base64, 'add');
                 });
             });
             pasteArea.addEventListener('click', () => pasteArea.focus());
@@ -302,9 +327,10 @@
         const editPasteArea = document.getElementById('editImagePasteArea');
         if(editPasteArea) {
             editPasteArea.addEventListener('paste', function(e) {
-                handlePaste(e, (base64) => {
-                    editPastedImageBase64 = base64;
-                    displayPreview(editPastedImageBase64, 'edit');
+                handlePaste(e, (blob, base64) => {
+                    editSelectedFileBlob = blob;
+                    isImageClearedOrChanged = true;
+                    displayPreview(base64, 'edit');
                 });
             });
             editPasteArea.addEventListener('click', () => editPasteArea.focus());
@@ -317,7 +343,7 @@
                     const blob = items[i].getAsFile();
                     const reader = new FileReader();
                     reader.onload = function(event) {
-                        callback(event.target.result);
+                        callback(blob, event.target.result);
                     };
                     reader.readAsDataURL(blob);
                     e.preventDefault();
@@ -350,15 +376,14 @@
         function handleFileDrop(e) {
             e.preventDefault();
             handleDragLeave(e);
-
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 const file = files[0];
                 if (file.type.indexOf('image') !== -1) {
                     const reader = new FileReader();
                     reader.onload = function(event) {
-                        pastedImageBase64 = event.target.result;
-                        displayPreview(pastedImageBase64, 'add');
+                        selectedFileBlob = file;
+                        displayPreview(event.target.result, 'add');
                     };
                     reader.readAsDataURL(file);
                 } else {
@@ -390,12 +415,13 @@
         function clearPastedImage(event, mode) {
             if (event) event.stopPropagation();
             if (mode === 'edit') {
-                editPastedImageBase64 = "";
+                editSelectedFileBlob = null;
+                isImageClearedOrChanged = true;
                 document.getElementById('editImagePreview').src = "";
                 document.getElementById('editImagePreviewContainer').classList.add('hidden');
                 document.getElementById('editPastePrompt').classList.remove('hidden');
             } else {
-                pastedImageBase64 = "";
+                selectedFileBlob = null;
                 document.getElementById('imagePreview').src = "";
                 document.getElementById('imagePreviewContainer').classList.add('hidden');
                 document.getElementById('pastePrompt').classList.remove('hidden');
@@ -453,6 +479,7 @@
             if(document.getElementById('approved-count')) document.getElementById('approved-count').innerText = tasks.filter(t => t.status === 'approved').length;
         }
 
+        // ระบบบันทึกงานใหม่: อัปโหลดรูปภาพขึ้น Storage ก่อน แล้วค่อยบันทึกลงฐานข้อมูล
         async function addNewTask() {
             const titleInput = document.getElementById('taskTitle');
             const assigneeInput = document.getElementById('taskAssignee');
@@ -460,13 +487,20 @@
 
             if (!titleInput.value.trim()) return alert('กรุณากรอกชื่องานด้วยครับ');
 
-            const id = 'task-' + Date.now();
+            const taskId = 'task-' + Date.now();
+            let imageUrl = "";
+
+            // หากมีการวางรูปภาพ ให้ส่งรูปดิบขึ้นถัง Storage ก่อน
+            if (selectedFileBlob) {
+                imageUrl = await uploadToStorage(selectedFileBlob, taskId) || "";
+            }
+
             const newTask = {
-                id: id,
+                id: taskId,
                 title: titleInput.value,
                 assignee: assigneeInput.value,
                 description: descInput.value,
-                image: pastedImageBase64,
+                image: imageUrl, // เก็บเป็นลิงก์ URL สั้นๆ ประหยัดพื้นที่ฐานข้อมูล
                 status: 'todo'
             };
 
@@ -492,11 +526,14 @@
             document.getElementById('editTaskAssignee').value = task.assignee || '';
             document.getElementById('editTaskDesc').value = task.desc || '';
             
+            editSelectedFileBlob = null;
+            isImageClearedOrChanged = false;
+
             if (task.image) {
-                editPastedImageBase64 = task.image;
                 displayPreview(task.image, 'edit');
             } else {
                 clearPastedImage(null, 'edit');
+                isImageClearedOrChanged = false; 
             }
 
             document.getElementById('editModal').classList.remove('hidden');
@@ -506,6 +543,7 @@
             document.getElementById('editModal').classList.add('hidden');
         }
 
+        // ระบบบันทึกการแก้ไขงานออนไลน์
         async function saveTaskEdit() {
             const id = document.getElementById('editTaskId').value;
             const title = document.getElementById('editTaskTitle').value;
@@ -514,11 +552,22 @@
 
             if (!title.trim()) return alert('ชื่องานห้ามว่างครับ');
 
+            const currentTask = tasks.find(t => t.id === id);
+            let finalImageUrl = currentTask ? currentTask.image : "";
+
+            if (isImageClearedOrChanged) {
+                if (editSelectedFileBlob) {
+                    finalImageUrl = await uploadToStorage(editSelectedFileBlob, id) || "";
+                } else {
+                    finalImageUrl = "";
+                }
+            }
+
             const { error } = await supabaseClient.from('tasks').update({
                 title: title,
                 assignee: assignee,
                 description: desc,
-                image: editPastedImageBase64
+                image: finalImageUrl
             }).eq('id', id);
 
             if (!error) {
@@ -546,7 +595,6 @@
         async function drop(ev, targetStatus) {
             ev.preventDefault();
             const taskId = ev.dataTransfer.getData('text/plain');
-            
             const { error } = await supabaseClient.from('tasks').update({ status: targetStatus }).eq('id', taskId);
             if (!error) {
                 fetchTasksOnline();
@@ -578,6 +626,7 @@
         }
 
         fetchTasksOnline();
+        // ตั้งหน้าระบบอัปเดตเรียลไทม์เช็กบอร์ดทุกๆ 5 วินาที
         setInterval(fetchTasksOnline, 5000);
     </script>
 </body>
